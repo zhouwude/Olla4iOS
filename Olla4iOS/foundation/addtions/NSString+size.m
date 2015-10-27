@@ -43,6 +43,12 @@
     return retSize;
 }
 
+- (CGSize)sizeWithFont:(UIFont *)font constrainedSize:(CGSize)size numberOfLine:(NSUInteger)lines{
+    CGFloat height = lines?font.lineHeight*lines:size.height;
+    CGSize constrainedSize = CGSizeMake(size.width, height);
+    return[self sizeWithFont:font constrainedSize:constrainedSize];
+}
+
 - (NSString *)escapeSpace{
     return [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }

@@ -29,6 +29,9 @@
     if (self.headerView) {
         self.tableView.tableHeaderView = self.headerView;
     }
+    if (self.footerView) {
+        self.tableView.tableFooterView = self.footerView;
+    }
 }
 
 - (void)dealloc{
@@ -69,7 +72,6 @@
 
 
 - (Class)refreshViewClass{
-    
     return [OllaRefreshView class];
 }
 
@@ -109,7 +111,7 @@
     
     NSUInteger dataSourceCount = [self.dataSource numberOfCellsAtSection:section];
     if (section==0) {
-        return [_headerCells count] + dataSourceCount ;
+        return [_headerCells count] + [_footerCells count] + dataSourceCount ;
     }
     return  dataSourceCount ;
 }
@@ -123,6 +125,10 @@
     
     if (indexPath.section==0 && indexPath.row<[_headerCells count]) {
         return [[_headerCells objectAtIndex:indexPath.row] frame].size.height;
+    }
+    
+    if (indexPath.section==0 && indexPath.row>=([_headerCells count]+[self.dataSource numberOfCellsAtSection:0])) {
+        return [[_footerCells objectAtIndex:indexPath.row] frame].size.height;
     }
     
     if (!tableView.autoHeight && !self.autoHeight) {//静态高度
@@ -145,10 +151,16 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     
-    DDLogInfo(@"indexPath row = %ld",(long)indexPath.row);
-    
     if (indexPath.section==0 && indexPath.row<[_headerCells count]) {
         UITableViewCell *cell = [_headerCells objectAtIndex:indexPath.row];
+        if ([cell isKindOfClass:OllaTableViewCell.class]) {
+            [self configCell:(OllaTableViewCell *)cell atIndexPath:indexPath];
+        }
+        return cell;
+    }
+    
+    if (indexPath.section==0 && indexPath.row>=([_headerCells count]+[self.dataSource numberOfCellsAtSection:0])) {
+        UITableViewCell *cell = [_footerCells objectAtIndex:(indexPath.row-[_headerCells count]-self.dataSource.count)];
         if ([cell isKindOfClass:OllaTableViewCell.class]) {
             [self configCell:(OllaTableViewCell *)cell atIndexPath:indexPath];
         }
@@ -219,17 +231,14 @@
 
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
     if ([self.delegate respondsToSelector:@selector(tableDataController:didSelectRowAtIndexPath:)]) {
         [self.delegate tableDataController:self didSelectRowAtIndexPath:indexPath];
     }
-    
 }
 
 - (void)tableViewCell:(OllaTableViewCell *)cell doAction:(id)sender event:(UIEvent *)event{
-    
     if ([self.delegate respondsToSelector:@selector(tableDataController:cell:doAction: event:)]) {
         [self.delegate tableDataController:self cell:cell doAction:sender event:event];
     }
@@ -265,9 +274,7 @@
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath *)indexPath{
-    
-    return @"删除";
-    
+    return NSLocalizedString(@"删除", @"");
 }
 
 
@@ -284,7 +291,5 @@
     [_tableView reloadData];
     
 }
-
-
 
 @end
